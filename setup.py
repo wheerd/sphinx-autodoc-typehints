@@ -38,11 +38,11 @@ setup(
     tests_require=[
         'pytest',
         'pytest-cov',
-        'Sphinx >= 1.4',
         'sphinx-testing',
-        'typing'
     ],
     install_requires=[
-        'Sphinx >= 1.4'
+        'Sphinx >= 1.4',
+        'sphinxcontrib-napoleon',
+        'typing'
     ]
 )
