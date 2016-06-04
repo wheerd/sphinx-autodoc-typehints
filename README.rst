@@ -73,4 +73,4 @@ Project links
 
 * `Source repository <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints>`_
 * `Issue tracker <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints/issues>`_
-* The project was originally forked from `Source repository <https://github.com/agronholm/sphinx-autodoc-typehints>`_
+* The project was originally forked from `here <https://github.com/agronholm/sphinx-autodoc-typehints>`_
