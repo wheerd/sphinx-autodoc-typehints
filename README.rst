@@ -1,3 +1,6 @@
+|Build Status| |Coverage Status|
+
+
 sphinx-autodoc-napoleon-typehints
 =================================
 
@@ -74,3 +77,9 @@ Project links
 * `Source repository <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints>`_
 * `Issue tracker <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints/issues>`_
 * The project was originally forked from `here <https://github.com/agronholm/sphinx-autodoc-typehints>`_
+
+
+.. |Build Status| image:: https://travis-ci.org/daviskirk/sphinx-autodoc-napoleon-typehints.svg?branch=master
+   :target: https://travis-ci.org/daviskirk/sphinx-autodoc-napoleon-typehints
+.. |Coverage Status| image:: https://coveralls.io/repos/github/daviskirk/sphinx-autodoc-napoleon-typehints/badge.svg?branch=master
+   :target: https://coveralls.io/github/daviskirk/sphinx-autodoc-napoleon-typehints?branch=master
