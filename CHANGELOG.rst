@@ -1,3 +1,11 @@
+2.0.0
+=====
+
+* Fork from `agronholm/sphinx-autodoc-typehints`_
+* Add support for napoleon docstrings
+* Add tests
+
+
 1.0.6
 =====
 

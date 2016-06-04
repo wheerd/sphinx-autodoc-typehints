@@ -1,5 +1,5 @@
-sphinx-autodoc-typehints
-========================
+sphinx-autodoc-napoleon-typehints
+=================================
 
 This extension allows you to use Python 3 annotations for documenting acceptable argument types
 and return value types of functions. This allows you to use type hints in a very natural fashion,
@@ -34,7 +34,7 @@ to this:
 
 
 There is also support for google docstrings or numpy docstrings with help of the napoleon
-`napoleon sphinx extention http://sphinxcontrib-napoleon.readthedocs.io/en/latest/`_.
+`napoleon sphinx extention <http://sphinxcontrib-napoleon.readthedocs.io/en/latest/>`_.
 
 
 Installation and setup
@@ -42,7 +42,7 @@ Installation and setup
 
 First, use pip to download and install the extension::
 
-    $ pip install sphinx-autodoc-typehints
+    $ pip install sphinx-autodoc-napoleon-typehints
 
 Then, add the extension to your ``conf.py``:
 
@@ -50,7 +50,7 @@ Then, add the extension to your ``conf.py``:
 
     extensions = [
         'sphinx.ext.autodoc',
-        'sphinx_autodoc_typehints'
+        'sphinx_autodoc_napoleon_typehints'
     ]
 
 
@@ -71,5 +71,6 @@ This extension does not currently have any configuration options.
 Project links
 -------------
 
-* `Source repository <https://github.com/agronholm/sphinx-autodoc-typehints>`_
-* `Issue tracker <https://github.com/agronholm/sphinx-autodoc-typehints/issues>`_
+* `Source repository <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints>`_
+* `Issue tracker <https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints/issues>`_
+* The project was originally forked from `Source repository <https://github.com/agronholm/sphinx-autodoc-typehints>`_

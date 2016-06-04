@@ -6,6 +6,7 @@
 .cache
 .eggs/
 *.egg-info/
+*.egg/
 *.pyc
 __pycache__/
 dist/

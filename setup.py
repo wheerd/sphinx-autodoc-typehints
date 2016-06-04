@@ -1,19 +1,20 @@
 import os.path
 
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
 
 here = os.path.dirname(__file__)
 readme_path = os.path.join(here, 'README.rst')
 readme = open(readme_path).read()
 
 setup(
-    name='sphinx-autodoc-typehints',
+    name='sphinx-autodoc-napoleon-typehints',
     use_scm_version=True,
     description='Type hints (PEP 484) support for the Sphinx autodoc extension',
     long_description=readme,
-    author='Alex Grönholm',
-    author_email='alex.gronholm@nextday.fi',
-    url='https://github.com/agronholm/sphinx-autodoc-typehints',
+    author='Davis Kirkendall',
+    author_email='davis.e.kirkendall@gmail.com',
+    url='https://github.com/daviskirk/sphinx-autodoc-napoleon-typehints',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Framework :: Sphinx :: Extension',
@@ -29,15 +30,19 @@ setup(
     ],
     license='MIT',
     zip_safe=True,
-    py_modules=['sphinx_autodoc_typehints'],
+    py_modules=['sphinx_autodoc_napoleon_typehints'],
     setup_requires=[
+        'pytest-runner',
         'setuptools_scm >= 1.7.0'
+    ],
+    tests_require=[
+        'pytest',
+        'pytest-cov',
+        'Sphinx >= 1.4',
+        'sphinx-testing',
+        'typing'
     ],
     install_requires=[
         'Sphinx >= 1.4'
-    ],
-    extras_require={
-        ':python_version == "3.3"': 'typing >= 3.5',
-        ':python_version == "3.4"': 'typing >= 3.5'
-    }
+    ]
 )

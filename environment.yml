@@ -1,0 +1,12 @@
+# This is mainly for dev purposes.
+name: sphinx-autodoc-napoleon-typehints
+dependencies:
+  - python=3.5
+  - Sphinx>=1.4
+  - ipython
+  - pytest
+  - pip:
+      - ipdb
+      - gnureadline
+      - sphinx-testing
+      - pytest-cov

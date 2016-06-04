@@ -179,7 +179,6 @@ def process_docstring(app, what, name, obj, options, lines):
         _process_numpy_docstrings(type_hints, lines)
 
 
-
 def setup(app):
     app.connect('autodoc-process-signature', process_signature)
     app.connect('autodoc-process-docstring', process_docstring)
