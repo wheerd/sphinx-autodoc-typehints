@@ -140,4 +140,8 @@ def test_autodoc(html):
     end_ix = html.rfind(end) + len(end)
     assert end_ix > -1, 'End of actual code documentation is not where it should be... it wasnt found at all.'
 
-    assert html[start_ix:end_ix] == expected
+    actual = html[start_ix:end_ix]
+    # The formatting of these annotations is not really important but varies depending on how the dependencies are installed. So we'll just replace both versions with the expected version
+    actual = actual.replace('&lt;+T_co&gt;', '[+T_co]')
+
+    assert actual == expected
