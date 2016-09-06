@@ -34,6 +34,10 @@ def format_annotation(annotation):
                     else:
                         annotation = Optional
                         params = (params[:-1],)
+            elif annotation.__qualname__ == 'Tuple':
+                params = annotation.__tuple_params__
+                if annotation.__tuple_use_ellipsis__:
+                    params += ('...',)
             else:
                 params = getattr(annotation, '__parameters__', None)
 

@@ -1,3 +1,8 @@
+2.1.0
+=====
+Added proper support for typing.Tuple (from `agronholm/sphinx-autodoc-typehints`_ pull request by Manuel Krebber
+
+
 2.0.0
 =====
 

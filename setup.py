@@ -36,7 +36,7 @@ setup(
         'setuptools_scm >= 1.7.0'
     ],
     tests_require=[
-        'pytest',
+        'pytest>=2.8,<3.0',
         'pytest-cov',
         'sphinx-testing',
     ],
