@@ -38,6 +38,44 @@ to this:
 
 There is also support for google docstrings or numpy docstrings with help of the napoleon
 `napoleon sphinx extention <http://sphinxcontrib-napoleon.readthedocs.io/en/latest/>`_.
+This means that even docstrings like this:
+
+.. code-block:: python
+
+    def format_unit_google(self, value: Union[float, int], unit: str, test: Optional[Union[Iterable, str]]) -> str:
+        """
+        Formats the given value as a human readable string using the given units.
+
+        Args:
+            value: a numeric value
+            unit: the unit for the value (kg, m, etc.)
+            test: bla bla blathe unit for the value (kg, m, etc.)
+
+        Returns:
+           This function returns something of
+           value: and does not overwrite this part.
+        """
+        return '{} {}'.format(value, unit)
+
+    def format_unit_numpy(self, value: Union[float, int], unit: str, test: Optional[Union[Iterable, str]]) -> str:
+        """
+        Formats the given value as a human readable string using the given units.
+
+        Parameters
+        ----------
+        value: a numeric value
+        unit: the unit for the value (kg, m, etc.)
+        test: bla bla blathe unit for the value (kg, m, etc.)
+
+        Returns
+        -------
+        This function returns something of
+        value: and does not overwrite this part.
+        """
+        return '{} {}'.format(value, unit)
+
+
+the result for which is the same as above
 
 
 Installation and setup
