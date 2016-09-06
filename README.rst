@@ -1,4 +1,4 @@
-|Build Status| |Coverage Status|
+|Build Status| |Coverage Status| |PyPi Status|
 
 
 sphinx-autodoc-napoleon-typehints
@@ -83,3 +83,5 @@ Project links
    :target: https://travis-ci.org/daviskirk/sphinx-autodoc-napoleon-typehints
 .. |Coverage Status| image:: https://coveralls.io/repos/github/daviskirk/sphinx-autodoc-napoleon-typehints/badge.svg?branch=master
    :target: https://coveralls.io/github/daviskirk/sphinx-autodoc-napoleon-typehints?branch=master
+.. |PyPi Status| image:: https://badge.fury.io/py/sphinx-autodoc-napoleon-typehints.svg
+   :target: https://badge.fury.io/py/sphinx-autodoc-napoleon-typehints

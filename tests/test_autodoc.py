@@ -9,7 +9,6 @@ import os
 from sphinx_testing import with_app
 
 import sys
-# sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__))))
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'example_doc_python_source'))
 
@@ -141,7 +140,9 @@ def test_autodoc(html):
     assert end_ix > -1, 'End of actual code documentation is not where it should be... it wasnt found at all.'
 
     actual = html[start_ix:end_ix]
-    # The formatting of these annotations is not really important but varies depending on how the dependencies are installed. So we'll just replace both versions with the expected version
+    # The formatting of these annotations is not really important but varies
+    # depending on how the dependencies are installed. So we'll just replace
+    # both versions with the expected version
     actual = actual.replace('&lt;+T_co&gt;', '[+T_co]')
 
     assert actual == expected
