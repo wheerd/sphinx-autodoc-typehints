@@ -143,6 +143,7 @@ def _process_google_docstrings(type_hints, lines, obj):
                         logger.debug('line replaced: %s', lines[i])
                         break
 
+
 def _check_numpy_section_start(lines, i, section=None):
     """Check if numpy section starts at line `i`"""
     return (
