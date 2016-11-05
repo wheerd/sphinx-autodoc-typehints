@@ -23,7 +23,7 @@ def format_annotation(annotation, obj=None):
             if annotation.__qualname__ == 'NoneType':
                 return '``None``'
             else:
-                return ':class:`%s`' % annotation.__qualname__
+                return ':class:`{}`'.format(annotation.__qualname__)
 
         params = None
         # Check first if we have an TypingMeta instance, because when mixing in another meta class,
@@ -70,8 +70,7 @@ def format_annotation(annotation, obj=None):
                     if annotation.__args__ is Ellipsis:
                         args_r = Ellipsis
                     else:
-                        args_r = '\\[%s]' % ', '.join(format_annotation(a, obj)
-                                                      for a in annotation.__args__)
+                        args_r = '\\[{}]'.format(', '.join(format_annotation(a, obj) for a in annotation.__args__))
                     params = [args_r, annotation.__result__]
             # Type variables are formatted with a prefix character (~, +, -)
             # which have to be escaped.
@@ -90,13 +89,13 @@ def format_annotation(annotation, obj=None):
                 except Exception:
                     return annotation.__forward_arg__
 
-        generic = params and '\\[%s]' % ', '.join(format_annotation(p, obj) for p in params) or ''
-        return ':class:`~%s.%s`%s' % (annotation.__module__, annotation.__qualname__, generic)
+        generic = params and '\\[{}]'.format(', '.join(format_annotation(p, obj) for p in params)) or ''
+        return ':class:`~{}.{}`{}'.format(annotation.__module__, annotation.__qualname__, generic)
     # _TypeAlias is an internal class used for the Pattern/Match types
     # It represents an alias for another type, e.g. Pattern is an alias for any string type
     elif isinstance(annotation, _TypeAlias):
         actual_type = format_annotation(annotation.type_var, obj)
-        return ':class:`~typing.%s`\\[%s]' % (annotation.name, actual_type)
+        return ':class:`~typing.{}`\\[{}]'.format(annotation.name, actual_type)
     # Ellipsis is used in Callable/Tuple
     elif annotation is Ellipsis:
         return '...'
