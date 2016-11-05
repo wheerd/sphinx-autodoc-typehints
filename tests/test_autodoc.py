@@ -4,13 +4,51 @@
 Testing.
 """
 
-import pytest
+import inspect
 import os
+import pytest
 from sphinx_testing import with_app
-
 import sys
+
+try:
+    from backports.typing import Union
+except ImportError:
+    from typing import Union
+
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'example_doc_python_source'))
+
+from sphinx_autodoc_napoleon_typehints import process_docstring
+
+
+def format_unit(value: Union[float, int], unit: str) -> str:
+    """
+    Formats the given value as a human readable string using the given units.
+
+    :param value: a numeric value
+    :param unit: the unit for the value (kg, m, etc.)
+    """
+    return '{} {}'.format(value, unit)
+
+expected_docstr = """
+    :rtype: :class:`str`
+    Formats the given value as a human readable string using the given units.
+
+    :type value: :class:`~typing.Union`\\[:class:`float`, :class:`int`]
+    :param value: a numeric value
+    :type unit: :class:`str`
+    :param unit: the unit for the value (kg, m, etc.)
+    """
+
+
+def test_process_docstring():
+    lines = inspect.cleandoc(format_unit.__doc__).splitlines()
+    expected_lines = inspect.cleandoc(expected_docstr).splitlines()
+
+    process_docstring(None, 'function', format_unit.__name__, format_unit, {}, lines)
+
+    assert lines == expected_lines
+
 
 expected = '''<p>This is test documentation</p>
 <span class="target" id="module-autodoc_napoleon_typehints_example"></span><p>Small module to provide sourcecode for testing if everything works as needed</p>
