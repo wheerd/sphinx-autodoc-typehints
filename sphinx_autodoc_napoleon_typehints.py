@@ -137,7 +137,7 @@ def _process_google_docstrings(type_hints, lines, obj):
                     if not line.startswith('  '):
                         in_args_section = False
                         break
-                    match = re.match('(  +{}) ?:(.*)'.format(argname), line)
+                    match = re.match('(  +{}) ?: *(.*)'.format(argname), line)
                     if match:
                         lines[i] = match.expand('\\1 ({}): \\2'.format(str(formatted_annotation)))
                         logger.debug('line replaced: %s', lines[i])
@@ -150,8 +150,7 @@ def _check_numpy_section_start(lines, i, section=None):
         i > 0 and
         i < len(lines) - 1 and
         lines[i + 1].startswith('---') and
-        (section and lines[i] == section or
-         re.match('\w+:', lines[i]))
+        (section is None or lines[i] == section)
     )
 
 
@@ -165,7 +164,6 @@ def _process_numpy_docstrings(type_hints, lines, obj):
         else:
             logger.debug('Searching for %s', argname)
             in_args_section = False
-            in_return_section = False
             for i, line in enumerate(lines):
                 if _check_numpy_section_start(lines, i - 1, 'Parameters'):
                     logger.debug('Numpy parameters section ended on line %i', i)
@@ -179,21 +177,6 @@ def _process_numpy_docstrings(type_hints, lines, obj):
                     if match:
                         lines[i] = argname + ' : ' + formatted_annotation
                         logger.debug('line replaced: %s', lines[i])
-                        break
-                elif (_check_numpy_section_start(lines, i, 'Returns') or
-                      _check_numpy_section_start(lines, i, 'Yields')):
-                    in_return_section = True
-                elif in_return_section:
-                    if _check_numpy_section_start(lines, i):
-                        in_return_section = False
-                        logger.debug('Numpy return section ended on line %i', i)
-                        break
-                    if lines[i - 1].startswith('---') and not line or line == ':':
-                        lines[i] = formatted_annotation
-                    if i < len(lines) - 1 and lines[i + 1].startswith('---') and re.match('\w+:', line):
-                        in_return_section = False
-                        logger.debug('Numpy parameters section ended on line %i', i)
-                        break
 
 
 def _process_sphinx_docstrings(type_hints, lines, obj):

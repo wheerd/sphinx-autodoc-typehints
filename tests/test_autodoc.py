@@ -9,147 +9,151 @@ import os
 import pytest
 from sphinx_testing import with_app
 import sys
-
-try:
-    from backports.typing import Union
-except ImportError:
-    from typing import Union
+from typing import (Any, Callable, Dict, Generic, Mapping, Optional, Pattern,
+                    Tuple, Type, TypeVar, Union)
 
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'example_doc_python_source'))
 
-from sphinx_autodoc_napoleon_typehints import process_docstring
+from sphinx_autodoc_napoleon_typehints import process_docstring, format_annotation
+from autodoc_napoleon_typehints_example import format_unit, format_unit_google, format_unit_numpy
 
 
-def format_unit(value: Union[float, int], unit: str) -> str:
-    """
-    Formats the given value as a human readable string using the given units.
+T = TypeVar('T')
+U = TypeVar('U', covariant=True)
+V = TypeVar('V', contravariant=True)
 
-    :param value: a numeric value
-    :param unit: the unit for the value (kg, m, etc.)
-    """
-    return '{} {}'.format(value, unit)
 
-expected_docstr = """
-    :rtype: :class:`str`
+class A:
+    def get_type(self) -> Type['A']:
+        return type(self)
+
+
+class B(Generic[T]):
+    pass
+
+
+class C(Dict[T, int]):
+    pass
+
+
+@pytest.mark.parametrize('annotation, expected_result', [
+    (str,                           ':class:`str`'),
+    (int,                           ':class:`int`'),
+    (type(None),                    '``None``'),
+    (Any,                           ':class:`~typing.Any`'),
+    (Generic[T],                    ':class:`~typing.Generic`\\[\\~T]'),
+    (Mapping,                       ':class:`~typing.Mapping`\\[\\~KT, \\+VT_co]'),
+    (Mapping[T, int],               ':class:`~typing.Mapping`\\[\\~T, :class:`int`]'),
+    (Mapping[str, V],               ':class:`~typing.Mapping`\\[:class:`str`, \\-V]'),
+    (Mapping[T, U],                 ':class:`~typing.Mapping`\\[\\~T, \\+U]'),
+    (Mapping[str, bool],            ':class:`~typing.Mapping`\\[:class:`str`, :class:`bool`]'),
+    (Dict,                          ':class:`~typing.Dict`\\[\\~KT, \\~VT]'),
+    (Dict[T, int],                  ':class:`~typing.Dict`\\[\\~T, :class:`int`]'),
+    (Dict[str, V],                  ':class:`~typing.Dict`\\[:class:`str`, \\-V]'),
+    (Dict[T, U],                    ':class:`~typing.Dict`\\[\\~T, \\+U]'),
+    (Dict[str, bool],               ':class:`~typing.Dict`\\[:class:`str`, :class:`bool`]'),
+    (Tuple,                         ':class:`~typing.Tuple`'),
+    (Tuple[str, bool],              ':class:`~typing.Tuple`\\[:class:`str`, :class:`bool`]'),
+    (Tuple[int, int, int],          ':class:`~typing.Tuple`\\[:class:`int`, :class:`int`, '
+                                    ':class:`int`]'),
+    (Tuple[str, ...],               ':class:`~typing.Tuple`\\[:class:`str`, ...]'),
+    (Union,                         ':class:`~typing.Union`'),
+    (Union[str, bool],              ':class:`~typing.Union`\\[:class:`str`, :class:`bool`]'),
+    (Optional[str],                 ':class:`~typing.Optional`\\[:class:`str`]'),
+    (Optional[Union[int, str]],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+                                    '\\[:class:`int`, :class:`str`]]'),
+    (Union[Optional[int], str],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+                                    '\\[:class:`int`, :class:`str`]]'),
+    (Union[int, Optional[str]],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+                                    '\\[:class:`int`, :class:`str`]]'),
+    (Callable,                      ':class:`~typing.Callable`'),
+    (Callable[..., int],            ':class:`~typing.Callable`\\[..., :class:`int`]'),
+    (Callable[[int], int],          ':class:`~typing.Callable`\\[\\[:class:`int`], :class:`int`]'),
+    (Callable[[int, str], bool],    ':class:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
+                                    ':class:`bool`]'),
+    (Callable[[int, str], None],    ':class:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
+                                    '``None``]'),
+    (Callable[[T], T],              ':class:`~typing.Callable`\\[\\[\\~T], \\~T]'),
+    (Pattern,                       ':class:`~typing.Pattern`\\[\\~AnyStr]'),
+    (Pattern[str],                  ':class:`~typing.Pattern`\\[:class:`str`]'),
+    (A,                             ':class:`~%s.A`' % __name__),
+    (B,                             ':class:`~%s.B`\\[\\~T]' % __name__),
+    (C,                             ':class:`~%s.C`\\[\\~T]' % __name__),
+    (Type,                          ':class:`~typing.Type`\\[\\+CT]'),
+    (Type[A],                       ':class:`~typing.Type`\\[:class:`~%s.A`]' % __name__),
+    (Type['A'],                     ':class:`~typing.Type`\\[A]'),
+    (Type['str'],                   ':class:`~typing.Type`\\[:class:`str`]'),
+])
+def test_format_annotation(annotation, expected_result):
+    result = format_annotation(annotation, None)
+    assert result == expected_result
+
+
+def test_format_annotation_with_obj():
+    result = format_annotation(Type['A'], A.get_type)
+    assert result == ':class:`~typing.Type`\\[:class:`~%s.A`]' % __name__
+
+    result = format_annotation(Type['A'], A)
+    assert result == ':class:`~typing.Type`\\[A]'
+
+
+@pytest.mark.parametrize('function, expected_docstr', [
+    (format_unit, """:rtype: :class:`str`
     Formats the given value as a human readable string using the given units.
 
     :type value: :class:`~typing.Union`\\[:class:`float`, :class:`int`]
-    :param value: a numeric value
+    :param value: A numeric value.
     :type unit: :class:`str`
-    :param unit: the unit for the value (kg, m, etc.)
+    :param unit: The unit for the value (kg, m, etc.).
+
+    :returns: This function returns something.
+
+    """),
+    (format_unit_google, """:rtype: :class:`str`
+    Formats the given value as a human readable string using the given units.
+
+    Args:
+        value (:class:`~typing.Union`\\[:class:`float`, :class:`int`]): A numeric value.
+        unit (:class:`str`): The unit for the value (kg, m, etc.).
+
+    Returns:
+        This function returns something.
+
+    """),
+    (format_unit_numpy, """:rtype: :class:`str`
+    Formats the given value as a human readable string using the given units.
+
+    Parameters
+    ----------
+    value : :class:`~typing.Union`\\[:class:`float`, :class:`int`]
+        A numeric value.
+    unit : :class:`str`
+        The unit for the value (kg, m, etc.).
+
+    Returns
+    -------
+    This function returns something.
+
+    """)
+])
+def test_process_napoleon_docstrings(function, expected_docstr):
+    """Test that the annotation transformations work as expected for numpy and
+    google docstring as well.
+
     """
-
-
-def test_process_docstring():
-    lines = inspect.cleandoc(format_unit.__doc__).splitlines()
+    lines = inspect.cleandoc(function.__doc__).splitlines()
     expected_lines = inspect.cleandoc(expected_docstr).splitlines()
 
-    process_docstring(None, 'function', format_unit.__name__, format_unit, {}, lines)
+    process_docstring(None, 'function', function.__name__, format_unit, {}, lines)
 
     assert lines == expected_lines
 
 
-expected = '''<p>This is test documentation</p>
-<span class="target" id="module-autodoc_napoleon_typehints_example"></span><p>Small module to provide sourcecode for testing if everything works as needed</p>
-<dl class="function">
-<dt id="autodoc_napoleon_typehints_example.format_unit">
-<code class="descclassname">autodoc_napoleon_typehints_example.</code><code class="descname">format_unit</code><span class="sig-paren">(</span><em>self</em>, <em>value</em>, <em>unit</em>, <em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#autodoc_napoleon_typehints_example.format_unit" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
-</tr>
-</tbody>
-</table>
-<p>Formats the given value as a human readable string using the given units.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>value</strong> (<code class="xref py py-class docutils literal"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal"><span class="pre">int</span></code>]) &#8211; a numeric value</li>
-<li><strong>unit</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; the unit for the value (kg, m, etc.)</li>
-<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">Iterable</span></code>[+T_co]]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="autodoc_napoleon_typehints_example.format_unit_google">
-<code class="descclassname">autodoc_napoleon_typehints_example.</code><code class="descname">format_unit_google</code><span class="sig-paren">(</span><em>self</em>, <em>value</em>, <em>unit</em>, <em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#autodoc_napoleon_typehints_example.format_unit_google" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
-</tr>
-</tbody>
-</table>
-<p>Formats the given value as a human readable string using the given units.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>value</strong> (<code class="xref py py-class docutils literal"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal"><span class="pre">int</span></code>]) &#8211; a numeric value</li>
-<li><strong>unit</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; the unit for the value (kg, m, etc.)</li>
-<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">Iterable</span></code>[+T_co]]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">This function returns something of
-value: and does not overwrite this part.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="autodoc_napoleon_typehints_example.format_unit_numpy">
-<code class="descclassname">autodoc_napoleon_typehints_example.</code><code class="descname">format_unit_numpy</code><span class="sig-paren">(</span><em>self</em>, <em>value</em>, <em>unit</em>, <em>test</em><span class="sig-paren">)</span><a class="headerlink" href="#autodoc_napoleon_typehints_example.format_unit_numpy" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></td>
-</tr>
-</tbody>
-</table>
-<p>Formats the given value as a human readable string using the given units.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>value</strong> (<em>a numeric value</em>) &#8211; </li>
-<li><strong>unit</strong> (<em>the unit for the value (kg, m, etc.)</em>) &#8211; </li>
-<li><strong>test</strong> (<em>bla bla blathe unit for the value (kg, m, etc.)</em>) &#8211; </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li><em>This function returns something of</em></li>
-<li><strong>value</strong> (<em>and does not overwrite this part.</em>)</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-'''
-
-
 @pytest.fixture
 def html():
-    """This insane hack is to deal with the fact that the with_app decorator
-    somehow eats the return value."""
+    """Test if plugin actually works
+    """
 
     html_str = ''
 
@@ -167,20 +171,13 @@ def html():
 
 
 def test_autodoc(html):
-    with open('html_output.html', 'w') as f:
-        f.write(html)
-
+    # with open('html_output.html', 'w') as f:
+    #     f.write(html)
     start = "<p>This is test documentation</p>"
     start_ix = html.find(start)
-    assert start_ix > -1, 'Start of actual code documentation is not where it should be... it wasnt found at all.'
+    assert start_ix > -1, 'Start of actual code documentation is not where it should be... it wasn\'t found at all.'
     end = '</dd></dl>\n'
     end_ix = html.rfind(end) + len(end)
-    assert end_ix > -1, 'End of actual code documentation is not where it should be... it wasnt found at all.'
-
+    assert end_ix > -1, 'End of actual code documentation is not where it should be... it wasn\'t found at all.'
     actual = html[start_ix:end_ix]
-    # The formatting of these annotations is not really important but varies
-    # depending on how the dependencies are installed. So we'll just replace
-    # both versions with the expected version
-    actual = actual.replace('&lt;+T_co&gt;', '[+T_co]')
-
-    assert actual == expected
+    assert actual
