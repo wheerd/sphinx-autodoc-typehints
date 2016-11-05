@@ -71,7 +71,7 @@ expected = '''<p>This is test documentation</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>value</strong> (<code class="xref py py-class docutils literal"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal"><span class="pre">int</span></code>]) &#8211; a numeric value</li>
 <li><strong>unit</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; the unit for the value (kg, m, etc.)</li>
-<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[(typing.Iterable[+T_co],)]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
+<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">Iterable</span></code>[+T_co]]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
 </ul>
 </td>
 </tr>
@@ -98,7 +98,7 @@ expected = '''<p>This is test documentation</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>value</strong> (<code class="xref py py-class docutils literal"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal"><span class="pre">int</span></code>]) &#8211; a numeric value</li>
 <li><strong>unit</strong> (<code class="xref py py-class docutils literal"><span class="pre">str</span></code>) &#8211; the unit for the value (kg, m, etc.)</li>
-<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[(typing.Iterable[+T_co],)]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
+<li><strong>test</strong> (<code class="xref py py-class docutils literal"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal"><span class="pre">Iterable</span></code>[+T_co]]) &#8211; bla bla blathe unit for the value (kg, m, etc.)</li>
 </ul>
 </td>
 </tr>
