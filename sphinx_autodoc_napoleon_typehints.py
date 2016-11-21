@@ -9,11 +9,36 @@ try:
                                   Union, _ForwardRef, _TypeAlias, get_type_hints)
 except ImportError:
     from typing import (Any, Callable, Generic, GenericMeta, Tuple, TypeVar, TypingMeta,
-                        Union, _ForwardRef, _TypeAlias, get_type_hints)
+                        Union, _ForwardRef, _TypeAlias, get_type_hints, Iterable, Iterator, Generator)
 
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
+class mutable_list_iter:
+    def __init__(self, list):
+        self._list = list
+        self._index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            value = self._list[self._index]
+        except IndexError:
+            raise StopIteration
+        self._index += 1
+        return value
+
+    def peek(self):
+        return self._list[self._index]
+
+    def undo(self):
+        self._index -= 1
+
+    def replace_last(self, new_value):
+        self._list[self._index - 1] = new_value
 
 
 def format_annotation(annotation, obj=None):
@@ -119,28 +144,111 @@ def process_signature(app, what: str, name: str, obj, options, signature, return
         return formatargspec(obj, *argspec[:-1]), None
 
 
-def _process_google_docstrings(type_hints, lines, obj):
-    """Process numpy docstrings parameters."""
-    for argname, annotation in type_hints.items():
-        formatted_annotation = format_annotation(annotation, obj)
+ARGUMENT_HEADINGS = (
+    'Args:',
+    'Arguments:',
+    'Parameters:',
+    'Other Parameters:',
+    'Keyword Args:',
+    'Keyword Arguments:'
+)
+RETURN_HEADINGS = (
+    'Return:',
+    'Returns:',
+    'Yield:',
+    'Yields:'
+)
 
-        if argname == 'return':
-            pass
+_google_return_regex = r'^{}(\w+)(?:\s+\((.*?)\))?\s*:\s*(.*)$'
+
+
+def _process_google_docstrings(app, type_hints, lines, obj):
+    """Process google docstrings parameters."""
+    lines = mutable_list_iter(lines)
+    found_arguments = set()
+    for line in lines:
+        if line.strip() in ARGUMENT_HEADINGS:
+            found_arguments.update(_process_google_args(app, lines, type_hints, obj))
+        elif line.strip() in RETURN_HEADINGS:
+            if _process_google_return(app, lines, type_hints, obj, line.startswith('Yield')):
+                found_arguments.add('return')
+
+    return found_arguments
+
+def _process_google_args(app, lines, type_hints, obj):
+    """Process the argument section of a google docstring."""
+    indent = None
+    found_arguments = set()
+    for line in lines:
+        if not line.strip():
+            continue
+        match = re.match(r'^\s+', line)
+        if not match:
+            lines.undo()
+            break
+        new_indent = match.group(0)
+        is_unindent = indent is not None and (
+            not new_indent.startswith(indent)
+            or len(indent) >= len(new_indent))
+        if is_unindent:
+            indent = None
+        if indent is None:
+            indent = match.group(0)
+            match = re.match(_google_return_regex.format(indent), line)
+            if match:
+                arg_name, arg_type, rest = match.groups()
+
+                if arg_type:
+                    app.debug("Skipping argument {} for {} because it already has a type "
+                              "defined in the docstring.".format(arg_name, obj.__name__))
+                elif arg_name in type_hints:
+                    if rest:
+                        rest = ' ' + rest
+                    arg_type = format_annotation(type_hints[arg_name], obj)
+                    lines.replace_last('{}{} ({}):{}'.format(indent, arg_name, arg_type, rest))
+                else:
+                    app.warn("Found argument {} for {} in the docstring, but got no type "
+                             "hint for it.".format(arg_name, obj.__name__))
+                found_arguments.add(arg_name)
         else:
-            logger.debug('Searching for %s', argname)
-            in_args_section = False
-            for i, line in enumerate(lines):
-                if line == 'Args:':
-                    in_args_section = True
-                elif in_args_section:
-                    if not line.startswith('  '):
-                        in_args_section = False
-                        break
-                    match = re.match('(  +{}) ?: *(.*)'.format(argname), line)
-                    if match:
-                        lines[i] = match.expand('\\1 ({}): \\2'.format(str(formatted_annotation)))
-                        logger.debug('line replaced: %s', lines[i])
-                        break
+            indent = None
+    return found_arguments
+
+def _process_google_return(app, lines, type_hints, obj, is_yield):
+    line = next(lines)
+    match = re.match(r'^(\s+)(?:(.*?)\s*:\s*)?(.*)$', line)
+    found = False
+    if match:
+        indent, return_type, rest = match.groups()
+
+        if return_type:
+            app.debug("Skipping return section of {} because it already has a type "
+                      "defined in the docstring.".format(obj.__name__))
+        elif 'return' in type_hints:
+            if rest:
+                rest = ' ' + rest
+            return_type = type_hints['return']
+            if is_yield:
+                if isinstance(return_type, type) and issubclass(return_type, (Iterable, Iterator, Generator)):
+                    return_type = return_type.__args__[0]
+                else:
+                    app.warn("{} has a yield section in the docstring, but the return "
+                             "type hint is not an iterable type ({}).".format(obj.__name__, return_type))
+            return_type = format_annotation(return_type, obj)
+            lines.replace_last('{}{}:{}'.format(indent, return_type, rest))
+        else:
+            app.warn("Found return/yield section for {} in the docstring, but got no "
+                     "type hint for it.".format(obj.__name__))
+        found = True
+
+        for line in lines:
+            if line.strip() and not line.startswith(indent):
+                lines.undo()
+                break
+    else:
+        lines.undo()
+
+    return found
 
 
 def _check_numpy_section_start(lines, i, section=None):
@@ -179,26 +287,25 @@ def _process_numpy_docstrings(type_hints, lines, obj):
 
 
 def _process_sphinx_docstrings(type_hints, lines, obj):
-    for argname, annotation in type_hints.items():
-        formatted_annotation = format_annotation(annotation, obj)
-
-        if argname == 'return':
-            insert_index = len(lines)
+    for arg_name, annotation in type_hints.items():
+        if arg_name == 'return':
+            if annotation is None:
+                continue
+            insert_index = None # len(lines)
             for i, line in enumerate(lines):
                 if line.startswith(':rtype:'):
                     insert_index = None
                     break
-                elif line.startswith(':return:') or line.startswith(':returns:') or line.startswith(''):
+                elif line.startswith(':return:') or line.startswith(':returns:'):
                     insert_index = i
-                    break
 
             if insert_index is not None:
-                lines.insert(insert_index, ':rtype: {}'.format(formatted_annotation))
+                lines.insert(insert_index, ':rtype: {}'.format(format_annotation(annotation, obj)))
         else:
-            searchfor = ':param {}:'.format(argname)
+            searchfor = ':param {}:'.format(arg_name)
             for i, line in enumerate(lines):
                 if line.startswith(searchfor):
-                    lines.insert(i, ':type {}: {}'.format(argname, formatted_annotation))
+                    lines.insert(i, ':type {}: {}'.format(arg_name, format_annotation(annotation, obj)))
                     break
 
 
@@ -217,7 +324,7 @@ def process_docstring(app, what, name, obj, options, lines):
             return
 
         _process_sphinx_docstrings(type_hints, lines, obj)
-        _process_google_docstrings(type_hints, lines, obj)
+        _process_google_docstrings(app, type_hints, lines, obj)
         _process_numpy_docstrings(type_hints, lines, obj)
 
 
