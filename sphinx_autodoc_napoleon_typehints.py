@@ -159,7 +159,8 @@ RETURN_HEADINGS = (
     'Yields:'
 )
 
-_google_return_regex = r'^{}(\w+)(?:\s+\((.*?)\))?\s*:\s*(.*)$'
+_google_args_regex = r'^{}(\*?\*?\s*)(\w+)(?:\s+\((.*?)\))?\s*:\s*(.*)$'
+_google_return_regex = r'^(\s+)(?:(.*?)\s*:\s*)?(.*)$'
 
 
 def _process_google_docstrings(app, type_hints, lines, obj):
@@ -194,9 +195,9 @@ def _process_google_args(app, lines, type_hints, obj):
             indent = None
         if indent is None:
             indent = match.group(0)
-            match = re.match(_google_return_regex.format(indent), line)
+            match = re.match(_google_args_regex.format(indent), line)
             if match:
-                arg_name, arg_type, rest = match.groups()
+                arg_prefix, arg_name, arg_type, rest = match.groups()
 
                 if arg_type:
                     app.debug("Skipping argument {} for {} because it already has a type "
@@ -205,7 +206,7 @@ def _process_google_args(app, lines, type_hints, obj):
                     if rest:
                         rest = ' ' + rest
                     arg_type = format_annotation(type_hints[arg_name], obj)
-                    lines.replace_last('{}{} ({}):{}'.format(indent, arg_name, arg_type, rest))
+                    lines.replace_last('{}{}{} ({}):{}'.format(indent, arg_prefix, arg_name, arg_type, rest))
                 else:
                     app.warn("Found argument {} for {} in the docstring, but got no type "
                              "hint for it.".format(arg_name, obj.__name__))
@@ -216,7 +217,7 @@ def _process_google_args(app, lines, type_hints, obj):
 
 def _process_google_return(app, lines, type_hints, obj, is_yield):
     line = next(lines)
-    match = re.match(r'^(\s+)(?:(.*?)\s*:\s*)?(.*)$', line)
+    match = re.match(_google_return_regex, line)
     found = False
     if match:
         indent, return_type, rest = match.groups()
