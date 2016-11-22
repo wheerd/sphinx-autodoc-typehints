@@ -1,6 +1,7 @@
 import inspect
 import logging
 import re
+import sys
 from sphinx.util.inspect import getargspec
 from sphinx.ext.autodoc import formatargspec
 
@@ -50,6 +51,7 @@ def format_annotation(annotation, obj=None):
             else:
                 return ':class:`{}`'.format(annotation.__qualname__)
 
+        role = 'class'
         params = None
         # Check first if we have an TypingMeta instance, because when mixing in another meta class,
         # some information might get lost.
@@ -58,7 +60,7 @@ def format_annotation(annotation, obj=None):
         if isinstance(annotation, TypingMeta):
             # Since Any is a superclass of everything, make sure it gets handled normally.
             if annotation is Any:
-                pass
+                role = 'data'
             # Generic classes have type arguments
             elif isinstance(annotation, GenericMeta):
                 params = annotation.__args__
@@ -68,6 +70,7 @@ def format_annotation(annotation, obj=None):
                     params = annotation.__parameters__
             # Tuples are not Generics, so handle their type parameters separately.
             elif issubclass(annotation, Tuple):
+                role = 'data'
                 if annotation.__tuple_params__:
                     params = list(annotation.__tuple_params__)
                 # Tuples can have variable size with a fixed type, indicated by an Ellipsis:
@@ -76,6 +79,7 @@ def format_annotation(annotation, obj=None):
                     params.append(Ellipsis)
             # Unions are not Generics, so handle their type parameters separately.
             elif issubclass(annotation, Union):
+                role = 'data'
                 if annotation.__union_params__:
                     params = list(annotation.__union_params__)
                     # If the Union contains None, wrap it in an Optional, i.e.
@@ -91,6 +95,7 @@ def format_annotation(annotation, obj=None):
             # arg_types is either a list of types or an Ellipsis for Callables with
             # variable arguments.
             elif issubclass(annotation, Callable):
+                role = 'data'
                 if annotation.__args__ is not None or annotation.__result__ is not None:
                     if annotation.__args__ is Ellipsis:
                         args_r = Ellipsis
@@ -115,7 +120,7 @@ def format_annotation(annotation, obj=None):
                     return annotation.__forward_arg__
 
         generic = params and '\\[{}]'.format(', '.join(format_annotation(p, obj) for p in params)) or ''
-        return ':class:`~{}.{}`{}'.format(annotation.__module__, annotation.__qualname__, generic)
+        return ':{}:`~{}.{}`{}'.format(role, annotation.__module__, annotation.__qualname__, generic)
     # _TypeAlias is an internal class used for the Pattern/Match types
     # It represents an alias for another type, e.g. Pattern is an alias for any string type
     elif isinstance(annotation, _TypeAlias):
@@ -150,7 +155,8 @@ ARGUMENT_HEADINGS = (
     'Parameters:',
     'Other Parameters:',
     'Keyword Args:',
-    'Keyword Arguments:'
+    'Keyword Arguments:',
+    'Attributes:'
 )
 RETURN_HEADINGS = (
     'Return:',
@@ -199,15 +205,25 @@ def _process_google_args(app, lines, type_hints, obj):
             if match:
                 arg_prefix, arg_name, arg_type, rest = match.groups()
 
+                type_hint = None
                 if arg_type:
-                    app.debug("Skipping argument {} for {} because it already has a type "
-                              "defined in the docstring.".format(arg_name, obj.__name__))
+                    if not '`' in arg_type:
+                        try:
+                            module = sys.modules[obj.__module__]
+                            type_hint = eval(arg_type, module.__dict__)
+
+                        except Exception as e:
+                            app.warn("Failed to parse type of argument {} for {}: {}."
+                                     .format(arg_name, obj.__name__, e))
                 elif arg_name in type_hints:
+                    type_hint = type_hints[arg_name]
+
+                if type_hint is not None:
                     if rest:
                         rest = ' ' + rest
-                    arg_type = format_annotation(type_hints[arg_name], obj)
+                    arg_type = format_annotation(type_hint, obj)
                     lines.replace_last('{}{}{} ({}):{}'.format(indent, arg_prefix, arg_name, arg_type, rest))
-                else:
+                elif not arg_type:
                     app.warn("Found argument {} for {} in the docstring, but got no type "
                              "hint for it.".format(arg_name, obj.__name__))
                 found_arguments.add(arg_name)
