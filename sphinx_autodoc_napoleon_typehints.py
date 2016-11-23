@@ -186,6 +186,8 @@ def _process_google_docstrings(app, type_hints, lines, obj):
     return found_arguments
 
 def _process_google_property(app, lines, type_hints, obj):
+    if not lines:
+        return
     try:
         property_type, rest = lines[0].rsplit(':', 2)
     except ValueError:
