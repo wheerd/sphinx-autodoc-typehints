@@ -2,8 +2,11 @@ import inspect
 import logging
 import re
 import sys
+
+from sphinx.ext.autodoc import (ClassDocumenter, Documenter, add_documenter,
+                                formatargspec)
+from sphinx.locale import _
 from sphinx.util.inspect import getargspec
-from sphinx.ext.autodoc import formatargspec
 
 try:
     from backports.typing import (Any, Callable, Generic, GenericMeta, Tuple, TypeVar, TypingMeta,
@@ -344,7 +347,26 @@ def process_docstring(app, what, name, obj, options, lines):
         _process_google_docstrings(app, type_hints, lines, obj)
         _process_numpy_docstrings(type_hints, lines, obj)
 
+class CustomClassDocumenter(ClassDocumenter):
+    def add_directive_header(self, sig):
+        # type: (unicode) -> None
+        if self.doc_as_attr:
+            self.directivetype = 'attribute'
+        Documenter.add_directive_header(self, sig)
+
+        # add inheritance info, if wanted
+        if not self.doc_as_attr and self.options.show_inheritance:
+            sourcename = self.get_sourcename()
+            self.add_line(u'', sourcename)
+            if hasattr(self.object, '__bases__') and len(self.object.__bases__):
+                bases = [format_annotation(b, self.object)
+                         for b in self.object.__bases__
+                         if b != object]
+                if bases:
+                    self.add_line(u'   ' + _(u'Bases: %s') % ', '.join(bases),
+                                  sourcename)
 
 def setup(app):
     app.connect('autodoc-process-signature', process_signature)
     app.connect('autodoc-process-docstring', process_docstring)
+    add_documenter(CustomClassDocumenter)
