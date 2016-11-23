@@ -185,6 +185,27 @@ def _process_google_docstrings(app, type_hints, lines, obj):
 
     return found_arguments
 
+def _process_google_property(app, lines, type_hints, obj):
+    try:
+        property_type, rest = lines[0].rsplit(':', 2)
+    except ValueError:
+        property_type, rest = None, lines[0]
+    type_hint = None
+    if property_type:
+        if not '`' in property_type:
+            try:
+                module = sys.modules[obj.__module__]
+                type_hint = eval(property_type, module.__dict__)
+
+            except Exception as e:
+                app.warn("Failed to parse return type of property {}: {}."
+                         .format(obj.__name__, e))
+    elif 'return' in type_hints:
+        type_hint = type_hints['return']
+    if type_hint is not None:
+        property_type = format_annotation(type_hint, obj)
+        lines[0] = '{}: {}'.format(property_type, rest)
+
 def _process_google_args(app, lines, type_hints, obj):
     """Process the argument section of a google docstring."""
     indent = None
@@ -330,22 +351,30 @@ def _process_sphinx_docstrings(type_hints, lines, obj):
 
 
 def process_docstring(app, what, name, obj, options, lines):
-    if callable(obj):
-        if what in ('class', 'exception'):
-            obj = getattr(obj, '__init__')
+    if what in ('class', 'exception'):
+        obj = getattr(obj, '__init__')
 
-        # Unwrap until we get to the original definition
-        while hasattr(obj, '__wrapped__'):
-            obj = obj.__wrapped__
+    is_property = False
 
-        try:
-            type_hints = get_type_hints(obj)
-        except AttributeError:
-            return
+    # Unwrap until we get to the original definition
+    while hasattr(obj, '__wrapped__'):
+        obj = obj.__wrapped__
 
-        _process_sphinx_docstrings(type_hints, lines, obj)
+    if isinstance(obj, property):
+        obj = obj.fget
+        is_property = True
+
+    try:
+        type_hints = get_type_hints(obj)
+    except AttributeError:
+        return
+
+    _process_sphinx_docstrings(type_hints, lines, obj)
+    if is_property:
+        _process_google_property(app, lines, type_hints, obj)
+    else:
         _process_google_docstrings(app, type_hints, lines, obj)
-        _process_numpy_docstrings(type_hints, lines, obj)
+    _process_numpy_docstrings(type_hints, lines, obj)
 
 class CustomClassDocumenter(ClassDocumenter):
     def add_directive_header(self, sig):
