@@ -193,7 +193,7 @@ def _process_google_property(app, lines, type_hints, obj):
     except ValueError:
         property_type, rest = None, lines[0]
     type_hint = None
-    if property_type:
+    if property_type and obj is not None:
         if not '`' in property_type:
             try:
                 module = sys.modules[obj.__module__]
@@ -356,7 +356,7 @@ def process_docstring(app, what, name, obj, options, lines):
     if what in ('class', 'exception'):
         obj = getattr(obj, '__init__')
 
-    is_property = False
+    is_property = what == 'attribute'
 
     # Unwrap until we get to the original definition
     while hasattr(obj, '__wrapped__'):
@@ -369,7 +369,7 @@ def process_docstring(app, what, name, obj, options, lines):
     try:
         type_hints = get_type_hints(obj)
     except AttributeError:
-        return
+        type_hints = {}
 
     _process_sphinx_docstrings(type_hints, lines, obj)
     if is_property:
