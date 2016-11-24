@@ -185,7 +185,7 @@ def _process_google_docstrings(app, type_hints, lines, obj):
 
     return found_arguments
 
-def _process_google_property(app, lines, type_hints, obj):
+def _process_google_property(app, lines, type_hints, obj, name):
     if not lines:
         return
     try:
@@ -193,15 +193,15 @@ def _process_google_property(app, lines, type_hints, obj):
     except ValueError:
         property_type, rest = None, lines[0]
     type_hint = None
-    if property_type and obj is not None:
+    if property_type:
         if not '`' in property_type:
             try:
-                module = sys.modules[obj.__module__]
-                type_hint = eval(property_type, module.__dict__)
+                globals = sys.modules[obj.__module__].__dict__ if hasattr(obj, '__module__') else {}
+                type_hint = eval(property_type, globals)
 
             except Exception as e:
                 app.warn("Failed to parse return type of property {}: {}."
-                         .format(obj.__name__, e))
+                         .format(name, e))
     elif 'return' in type_hints:
         type_hint = type_hints['return']
     if type_hint is not None:
@@ -373,7 +373,7 @@ def process_docstring(app, what, name, obj, options, lines):
 
     _process_sphinx_docstrings(type_hints, lines, obj)
     if is_property:
-        _process_google_property(app, lines, type_hints, obj)
+        _process_google_property(app, lines, type_hints, obj, name)
     else:
         _process_google_docstrings(app, type_hints, lines, obj)
     _process_numpy_docstrings(type_hints, lines, obj)
