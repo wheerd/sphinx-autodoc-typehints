@@ -149,7 +149,10 @@ def process_signature(app, what: str, name: str, obj, options, signature, return
         if inspect.ismethod(obj) and argspec.args:
             del argspec.args[0]
 
-        return formatargspec(obj, *argspec[:-1]), None
+        try:
+            return formatargspec(obj, *argspec[:-1]), None
+        except Exception:
+            return signature, return_annotation
 
 
 ARGUMENT_HEADINGS = (
@@ -368,7 +371,7 @@ def process_docstring(app, what, name, obj, options, lines):
 
     try:
         type_hints = get_type_hints(obj)
-    except AttributeError:
+    except (AttributeError, ValueError):
         type_hints = {}
 
     _process_sphinx_docstrings(type_hints, lines, obj)
