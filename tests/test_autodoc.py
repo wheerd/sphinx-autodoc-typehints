@@ -41,7 +41,7 @@ class C(Dict[T, int]):
     (str,                           ':class:`str`'),
     (int,                           ':class:`int`'),
     (type(None),                    '``None``'),
-    (Any,                           ':class:`~typing.Any`'),
+    (Any,                           ':data:`~typing.Any`'),
     (Generic[T],                    ':class:`~typing.Generic`\\[\\~T]'),
     (Mapping,                       ':class:`~typing.Mapping`\\[\\~KT, \\+VT_co]'),
     (Mapping[T, int],               ':class:`~typing.Mapping`\\[\\~T, :class:`int`]'),
@@ -58,29 +58,29 @@ class C(Dict[T, int]):
     (Tuple[int, int, int],          ':class:`~typing.Tuple`\\[:class:`int`, :class:`int`, '
                                     ':class:`int`]'),
     (Tuple[str, ...],               ':class:`~typing.Tuple`\\[:class:`str`, ...]'),
-    (Union,                         ':class:`~typing.Union`'),
-    (Union[str, bool],              ':class:`~typing.Union`\\[:class:`str`, :class:`bool`]'),
-    (Optional[str],                 ':class:`~typing.Optional`\\[:class:`str`]'),
-    (Optional[Union[int, str]],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+    (Union,                         ':data:`~typing.Union`'),
+    (Union[str, bool],              ':data:`~typing.Union`\\[:class:`str`, :class:`bool`]'),
+    (Optional[str],                 ':data:`~typing.Optional`\\[:class:`str`]'),
+    (Optional[Union[int, str]],     ':data:`~typing.Optional`\\[:data:`~typing.Union`'
                                     '\\[:class:`int`, :class:`str`]]'),
-    (Union[Optional[int], str],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+    (Union[Optional[int], str],     ':data:`~typing.Optional`\\[:data:`~typing.Union`'
                                     '\\[:class:`int`, :class:`str`]]'),
-    (Union[int, Optional[str]],     ':class:`~typing.Optional`\\[:class:`~typing.Union`'
+    (Union[int, Optional[str]],     ':data:`~typing.Optional`\\[:data:`~typing.Union`'
                                     '\\[:class:`int`, :class:`str`]]'),
-    (Callable,                      ':class:`~typing.Callable`'),
-    (Callable[..., int],            ':class:`~typing.Callable`\\[..., :class:`int`]'),
-    (Callable[[int], int],          ':class:`~typing.Callable`\\[\\[:class:`int`], :class:`int`]'),
-    (Callable[[int, str], bool],    ':class:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
+    (Callable,                      ':data:`~typing.Callable`'),
+    (Callable[..., int],            ':data:`~typing.Callable`\\[..., :class:`int`]'),
+    (Callable[[int], int],          ':data:`~typing.Callable`\\[\\[:class:`int`], :class:`int`]'),
+    (Callable[[int, str], bool],    ':data:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
                                     ':class:`bool`]'),
-    (Callable[[int, str], None],    ':class:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
+    (Callable[[int, str], None],    ':data:`~typing.Callable`\\[\\[:class:`int`, :class:`str`], '
                                     '``None``]'),
-    (Callable[[T], T],              ':class:`~typing.Callable`\\[\\[\\~T], \\~T]'),
+    (Callable[[T], T],              ':data:`~typing.Callable`\\[\\[\\~T], \\~T]'),
     (Pattern,                       ':class:`~typing.Pattern`\\[\\~AnyStr]'),
     (Pattern[str],                  ':class:`~typing.Pattern`\\[:class:`str`]'),
     (A,                             ':class:`~%s.A`' % __name__),
     (B,                             ':class:`~%s.B`\\[\\~T]' % __name__),
     (C,                             ':class:`~%s.C`\\[\\~T]' % __name__),
-    (Type,                          ':class:`~typing.Type`\\[\\+CT]'),
+    (Type,                          ':class:`~typing.Type`\\[\\+CT_co]'),
     (Type[A],                       ':class:`~typing.Type`\\[:class:`~%s.A`]' % __name__),
     (Type['A'],                     ':class:`~typing.Type`\\[A]'),
     (Type['str'],                   ':class:`~typing.Type`\\[:class:`str`]'),
