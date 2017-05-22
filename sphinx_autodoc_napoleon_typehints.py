@@ -15,7 +15,7 @@ Any = object()
 TypeVar = []
 Union = []
 ForwardRef = []
-
+Iterables = []
 try:
     import typing
     GenericMeta.append(typing.GenericMeta)
@@ -23,6 +23,9 @@ try:
     TypeVar.append(typing.TypeVar)
     Any = typing.Any
     ForwardRef.append(typing._ForwardRef)
+    Iterables.append(typing.Iterable)
+    Iterables.append(typing.Iterator)
+    Iterables.append(typing.Generator)
     if hasattr(typing, '_Union'):
         Union.append(typing._Union)
 except ImportError:
@@ -34,6 +37,9 @@ try:
     Generic.append(backports.typing.Generic)
     TypeVar.append(backports.typing.TypeVar)
     ForwardRef.append(backports.typing._ForwardRef)
+    Iterables.append(backports.typing.Iterable)
+    Iterables.append(backports.typing.Iterator)
+    Iterables.append(backports.typing.Generator)
     if hasattr(backports.typing, '_Union'):
         Union.append(backports.typing._Union)
 except ImportError:
@@ -44,6 +50,7 @@ Generic = tuple(Generic)
 TypeVar = tuple(TypeVar)
 Union = tuple(Union)
 ForwardRef = tuple(ForwardRef)
+Iterables = tuple(Iterables)
 
 try:
     from typing import get_type_hints
@@ -366,7 +373,7 @@ def _process_google_return(app, lines, type_hints, obj, is_yield):
                 rest = ' ' + rest
             return_type = type_hints['return']
             if is_yield:
-                if isinstance(return_type, type) and issubclass(return_type, (Iterable, Iterator, Generator)):
+                if isinstance(return_type, type) and issubclass(return_type, Iterables):
                     return_type = return_type.__args__[0]
                 else:
                     app.warn("{} has a yield section in the docstring, but the return "
